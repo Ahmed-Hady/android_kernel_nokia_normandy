@@ -192,7 +192,7 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 export KBUILD_BUILDHOST := $(SUBARCH)
-ARCH		?= $(SUBARCH)
+ARCH		?= arm
 CROSS_COMPILE	?= $(CONFIG_CROSS_COMPILE:"%"=%)
 
 # Architecture as present in compile.h
@@ -245,8 +245,8 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = ccache gcc
 HOSTCXX      = ccache g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
-HOSTCXXFLAGS = -O2
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer
+HOSTCXXFLAGS = -O3
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -347,28 +347,23 @@ CHECK		= sparse
 
 # Use the wrapper for the compiler.  This wrapper scans for new
 # warnings and causes the build to stop upon encountering them.
-CC		= $(srctree)/scripts/gcc-wrapper.py $(REAL_CC)
+CC		= $(srctree)/scripts/gcc-wrapper.py $(REAL_CC) 
 
 CHECKFLAGS	:= -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 			   -Wbitwise -Wno-return-void $(CF)
-MODFLAGS	= -DMODULE
-COMMON_OPT_FLAGS	= -mfloat-abi=soft -munaligned-access -marm \
-					  -march=armv7-a -mtune=cortex-a5 -mfpu=neon-vfpv4 \
-					  -mvectorize-with-neon-quad -ffloat-store \
-					  -ffast-math -fgcse-lm -fgcse-sm -fgcse-las \
-					  -fforce-addr -fsingle-precision-constant \
-					  -ftree-vectorize -ftree-parallelize-loops=2 \
-					  -funswitch-loops -fmodulo-sched -fmodulo-sched-allow-regmoves \
-					  -flto -fno-toplevel-reorder -fuse-linker-plugin \
-					  -fpredictive-commoning -fgraphite -fgraphite-identity \
-					  -floop-parallelize-all -ftree-loop-linear \
-					  -floop-interchange -floop-strip-mine -floop-block \
-					  -pipe
-CFLAGS_MODULE	= $(MODFLAGS) $(COMMON_OPT_FLAGS) -fno-pic
-AFLAGS_MODULE	= $(MODFLAGS) $(COMMON_OPT_FLAGS) -fno-pic
+
+LIN_FLAG  = -mfloat-abi=soft -munaligned-access -marm -march=armv7-a -mtune=cortex-a5 -mfpu=neon-vfpv4 -mvectorize-with-neon-quad \
+	    -ffloat-store -ffast-math -foptimize-sibling-calls -fcrossjumping -fgcse-lm -fgcse-sm -fgcse-las -fsched-spec-load \
+	    -fforce-addr -fsingle-precision-constant -funsafe-math-optimizations -ftree-vectorize -funswitch-loops -fno-toplevel-reorder \
+	    -fuse-linker-plugin -fpredictive-commoning -fgraphite -fgraphite-identity -ftree-loop-linear -floop-interchange -floop-strip-mine \
+	    -floop-block -fsanitize=leak -fopenmp -lgomp -lgcc -pipe
+
+MODFLAGS  = -DMODULE $(LIN_FLAG)
+CFLAGS_MODULE   = $(MODFLAGS) -fno-pic
+AFLAGS_MODULE	= $(MODFLAGS) -fno-pic
 LDFLAGS_MODULE	=
-CFLAGS_KERNEL	= $(COMMON_OPT_FLAGS)
-AFLAGS_KERNEL	= $(COMMON_OPT_FLAGS)
+CFLAGS_KERNEL	= $(LIN_FLAG)
+AFLAGS_KERNEL	= $(LIN_FLAG)
 CFLAGS_GCOV		= -fprofile-arcs -ftest-coverage
 
 # Use LINUXINCLUDE when you must reference the include/ directory.
@@ -380,27 +375,28 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
+#
+# Optimizations
+#
+CFLAGS_A5 = -mtune=cortex-a5 -marm -march=armv7-a -mfpu=neon-vfpv4 -funsafe-math-optimizations -ftree-vectorize
+CFLAGS_MODULO = -fmodulo-sched -fmodulo-sched-allow-regmoves
+KERNEL_MODS	= $(CFLAGS_A5) $(CFLAGS_MODULO)
+
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
+		   -fno-delete-null-pointer-checks \
+		   -mno-unaligned-access \
 		   -Wno-sizeof-pointer-memaccess \
-		   -fno-delete-null-pointer-checks
+		    $(KERNEL_MODS)
+
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
 KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
-
-# wang.junxian2@byd.com added for project & stage
-# begin
-
-ifneq ($(BYD_PROJECT_STAGE),)
-KBUILD_CFLAGS += -D$(BYD_PROJECT_STAGE)
-endif
-
-#end
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
@@ -587,7 +583,7 @@ all: vmlinux
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os
 else
-KBUILD_CFLAGS	+= -O2
+KBUILD_CFLAGS	+= -O3
 endif
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
