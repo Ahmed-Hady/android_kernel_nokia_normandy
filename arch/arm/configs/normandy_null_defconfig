@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm 3.4.105 Kernel Configuration
+# Linux/arm 3.4.106 Kernel Configuration
 #
 CONFIG_ARM=y
 CONFIG_ARM_HAS_SG_CHAIN=y
@@ -2989,7 +2989,7 @@ CONFIG_IOMMU_SUPPORT=y
 # CONFIG_MSM_QDSS is not set
 
 #
-# NVBK share memory
+# NVBK share memory 
 #
 CONFIG_NVBK_SHARE_MEM=y
 
