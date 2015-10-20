@@ -15,6 +15,8 @@ cfg80211-$(CONFIG_CFG80211_DEBUGFS) += debugfs.o
 cfg80211-$(CONFIG_CFG80211_WEXT) += wext-compat.o wext-sme.o
 cfg80211-$(CONFIG_CFG80211_INTERNAL_REGDB) += regdb.o
 
+#obj-$(CONFIG_ATH_COMMON)	+= ath/
+
 ccflags-y += -D__CHECK_ENDIAN__
 
 $(obj)/regdb.c: $(src)/db.txt $(src)/genregdb.awk
