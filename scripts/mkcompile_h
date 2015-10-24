@@ -20,7 +20,7 @@ if [ -r $TARGET -a ! -O include/generated/autoconf.h ]; then
 fi
 
 # Masking buildname and buildhost.
-USER=mdfzhi
+USER=AHMED-HADY
 HOST=xda-developers
 
 # Do not expand names

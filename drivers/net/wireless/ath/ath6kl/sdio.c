@@ -709,7 +709,7 @@ static int ath6kl_sdio_enable_scatter(struct ath6kl *ar)
 {
 	struct ath6kl_sdio *ar_sdio = ath6kl_sdio_priv(ar);
 	struct htc_target *target = ar->htc_target;
-	int ret = 0;
+	int ret;
 	bool virt_scat = false;
 
 	if (ar_sdio->scatter_enabled)
@@ -899,14 +899,13 @@ static int ath6kl_sdio_suspend(struct ath6kl *ar, struct cfg80211_wowlan *wow)
 		 * the sdc2_clock and internally allows MSM to enter
 		 * TCXO shutdown properly.
 		 */
-#if 0
 		if ((flags & MMC_PM_WAKE_SDIO_IRQ)) {
 			ret = sdio_set_host_pm_flags(func,
 						MMC_PM_WAKE_SDIO_IRQ);
 			if (ret)
 				goto cut_pwr;
 		}
-#endif
+
 		ret = ath6kl_cfg80211_suspend(ar, ATH6KL_CFG_SUSPEND_DEEPSLEEP,
 					      NULL);
 		if (ret)
