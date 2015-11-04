@@ -1498,7 +1498,6 @@ CONFIG_LIBRA_SDIOIF=m
 # CONFIG_IWM is not set
 # CONFIG_LIBERTAS is not set
 # CONFIG_MWIFIEX is not set
-# CONFIG_ATH6KL_HUAWEI is not set
 
 #
 # Enable WiMAX (Networking options) to see the WiMAX drivers
