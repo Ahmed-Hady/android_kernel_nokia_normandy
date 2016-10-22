@@ -277,7 +277,6 @@ xt_socket_get6_sk(const struct sk_buff *skb, struct xt_action_param *par)
 	struct udphdr _hdr, *hp = NULL;
 	struct sock *sk;
 	const struct in6_addr *daddr, *saddr;
-	struct in6_addr *daddr = NULL, *saddr = NULL;
 	__be16 uninitialized_var(dport), uninitialized_var(sport);
 	int thoff = 0, uninitialized_var(tproto);
 
