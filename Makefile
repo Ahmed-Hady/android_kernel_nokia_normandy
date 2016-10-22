@@ -408,7 +408,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks -Wno-array-bounds -Wno-maybe-uninitialized
+		   -fno-delete-null-pointer-checks -Wno-array-bounds -Wno-maybe-uninitialized \
 		   -mno-unaligned-access \
                    -marm -mfloat-abi=softfp -march=armv7-a \
                    -mfpu=neon-fp16 -ffast-math -pipe \
