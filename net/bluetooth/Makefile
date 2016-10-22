@@ -2,8 +2,6 @@
 # Makefile for the Linux Bluetooth subsystem.
 #
 
-ccflags-y += -Wno-sizeof-pointer-memaccess
-
 obj-$(CONFIG_BT)	+= bluetooth.o
 obj-$(CONFIG_BT_RFCOMM)	+= rfcomm/
 obj-$(CONFIG_BT_BNEP)	+= bnep/
