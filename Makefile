@@ -192,7 +192,7 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 export KBUILD_BUILDHOST := $(SUBARCH)
-ARCH		?= $(SUBARCH)
+ARCH		?= arm
 CROSS_COMPILE	?= $(CONFIG_CROSS_COMPILE:"%"=%)
 
 # Architecture as present in compile.h
@@ -250,8 +250,8 @@ else
 HOSTCC       = gcc
 HOSTCXX      = g++
 endif
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer
-HOSTCXXFLAGS = -O2
+HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer
+HOSTCXXFLAGS = -O3
 
 # Decide whether to build built-in, modular, or both.
 # Normally, just do built-in.
@@ -368,15 +368,23 @@ ARM_FLAGS       = -funswitch-loops \
 
 # Use the wrapper for the compiler.  This wrapper scans for new
 # warnings and causes the build to stop upon encountering them.
-CC		= $(srctree)/scripts/gcc-wrapper.py $(REAL_CC)
+CC		= $(srctree)/scripts/gcc-wrapper.py $(REAL_CC) 
 
 CHECKFLAGS     := -D__linux__ -Dlinux -D__STDC__ -Dunix -D__unix__ \
 		  -Wbitwise -Wno-return-void $(CF)
-CFLAGS_MODULE   = $(ARM_FLAGS) -DMODULE
-AFLAGS_MODULE   = $(ARM_FLAGS) -DMODULE --strip-debug
+
+LIN_FLAG  = -mfloat-abi=soft -munaligned-access -marm -march=armv7-a -mtune=cortex-a5 -mfpu=neon-vfpv4 -mvectorize-with-neon-quad \
+	    -ffloat-store -ffast-math -foptimize-sibling-calls -fcrossjumping -fgcse-lm -fgcse-sm -fgcse-las -fsched-spec-load \
+	    -fforce-addr -fsingle-precision-constant -funsafe-math-optimizations -ftree-vectorize -funswitch-loops -fno-toplevel-reorder \
+	    -fuse-linker-plugin -fpredictive-commoning -fgraphite -fgraphite-identity -ftree-loop-linear -floop-interchange -floop-strip-mine \
+	    -floop-block -fsanitize=leak -fopenmp -lgomp -lgcc -pipe
+
+MODFLAGS  = -DMODULE $(LIN_FLAG)
+CFLAGS_MODULE   = $(MODFLAGS) -fno-pic
+AFLAGS_MODULE	= $(MODFLAGS) -fno-pic
 LDFLAGS_MODULE  = -T $(srctree)/scripts/module-common.lds
-CFLAGS_KERNEL  = $(ARM_FLAGS) -ftree-vectorize 
-AFLAGS_KERNEL  =
+CFLAGS_KERNEL	= $(LIN_FLAG)
+AFLAGS_KERNEL	= $(LIN_FLAG)
 CFLAGS_GCOV	= -fprofile-arcs -ftest-coverage
 
 
@@ -389,32 +397,33 @@ LINUXINCLUDE    := -I$(srctree)/arch/$(hdr-arch)/include \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
+#
+# Optimizations
+#
+CFLAGS_A5 = -mtune=cortex-a5 -marm -march=armv7-a -mfpu=neon-vfpv4 -funsafe-math-optimizations -ftree-vectorize
+CFLAGS_MODULO = -fmodulo-sched -fmodulo-sched-allow-regmoves
+KERNEL_MODS	= $(CFLAGS_A5) $(CFLAGS_MODULO)
+
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
+		   -fno-delete-null-pointer-checks -Wno-array-bounds -Wno-maybe-uninitialized
+		   -mno-unaligned-access \
                    -marm -mfloat-abi=softfp -march=armv7-a \
                    -mfpu=neon-fp16 -ffast-math -pipe \
                    -funswitch-loops -fpredictive-commoning -fgcse-after-reload -fno-tree-vectorize \
                    -ftree-vectorize -funsafe-math-optimizations \
                    -fsched-spec-load -mvectorize-with-neon-quad \
                    -fmodulo-sched -fmodulo-sched-allow-regmoves \
-		   -fno-delete-null-pointer-checks -Wno-array-bounds -Wno-maybe-uninitialized
+		    $(KERNEL_MODS)
+
 KBUILD_AFLAGS_KERNEL := -Wa,-mimplicit-it=thumb
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
 KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
-
-# wang.junxian2@byd.com added for project & stage
-# begin
-
-ifneq ($(BYD_PROJECT_STAGE),)
-KBUILD_CFLAGS += -D$(BYD_PROJECT_STAGE)
-endif
-
-#end
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
@@ -601,7 +610,7 @@ all: vmlinux
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS	+= -Os
 else
-KBUILD_CFLAGS	+= -O2
+KBUILD_CFLAGS	+= -O3
 endif
 
 include $(srctree)/arch/$(SRCARCH)/Makefile
